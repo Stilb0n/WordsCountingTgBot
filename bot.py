@@ -8,21 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from config import TOKEN
 from app.database.models import User
+from app.middlewares import SessionMiddleware, UserMiddleware  
+from app.database.models import async_session
 
-async def register_user(tg_id: int, session: AsyncSession):
-    async with session.begin():
-        # Проверяем, существует ли пользователь
-        result = await session.execute(select(User).where(User.tg_id == tg_id))
-        user = result.scalar_one_or_none()
-        
-        if user is None:
-            # Создаем нового пользователя, если он не найден
-            new_user = User(tg_id=tg_id)
-            session.add(new_user)
-            await session.commit()
-            print(f"Пользователь с ID {tg_id} зарегистрирован.")
-        else:
-            print(f"Пользователь с ID {tg_id} уже существует.")
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -32,7 +20,8 @@ bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 
 dp = Dispatcher(storage=storage)
-
+dp.update.middleware(SessionMiddleware(async_session))
+dp.update.middleware(UserMiddleware())
 
 
 # Регистрация роутера в диспетчере

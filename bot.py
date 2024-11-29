@@ -3,7 +3,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from app.handlers import router
-
+from app.database.models import async_main
 
 from config import TOKEN
 
@@ -24,6 +24,7 @@ dp.include_router(router)
 
 # Запуск бота
 async def main():
+    await async_main()
     await dp.start_polling(bot)
 
 if __name__ == '__main__':

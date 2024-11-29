@@ -17,25 +17,24 @@ router = Router()
 async def cmd_start(message: Message):
     await rq.set_user(message.from_user.id)
     await message.reply("Привет! Отправь мне текст, и я посчитаю частоту слов в нём.", reply_markup=kb.settings)
-@router.message()
-async def test_handler(message: Message):
-    logging.info(f"Test handler вызван для сообщения: {message.text}")
-    await message.answer("Сообщение обработано!")    
+
 
 # Обработка текстовых сообщений для подсчёта частоты слов
 @router.message(lambda msg: msg.content_type == ContentType.TEXT)
 async def count_word_frequency(message: Message, **kwargs):
     session = kwargs.get("session")
     tg_id = message.from_user.id
-    user.request_count += 1
-    await message.answer(f"Пользователь: {user.tg_id}, запросов: {user.request_count}")
-    # Извлечение пользователя напрямую
+    
+    # Извлечение пользователя из базы
     result = await session.execute(select(User).where(User.tg_id == tg_id))
     user = result.scalar_one_or_none()
+    
     if not user:
-        user = User(tg_id=tg_id, request_count=0)
+        user = User(tg_id=tg_id, request_count=1)  # Начинаем с 1, если новый пользователь
         session.add(user)
-        await session.commit()
+    else:
+        user.request_count += 1  # Увеличиваем счетчик для существующего пользователя
 
-    user.request_count += 1
+    await session.commit()  # Сохраняем изменения в базе
+
     await message.answer(f"Пользователь: {user.tg_id}, запросов: {user.request_count}")

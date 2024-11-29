@@ -3,11 +3,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy import Integer, DateTime, func
 import asyncio
-
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 engine = create_async_engine(url='postgresql+asyncpg://postgres:12345@localhost/WordCountingTgBot_db')
 
-async_session = async_sessionmaker(engine)
-
+#async_session = async_sessionmaker(engine)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 

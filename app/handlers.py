@@ -3,6 +3,7 @@ from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import ContentType, Message
 
+import app.keyboards as kb
 
 router = Router()
 
@@ -10,7 +11,7 @@ router = Router()
 # Обработка команды /start
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer("Привет! Отправь мне текст, и я посчитаю частоту слов в нём.")
+    await message.reply("Привет! Отправь мне текст, и я посчитаю частоту слов в нём.", reply_markup=kb.settings)
 
 # Обработка текстовых сообщений для подсчёта частоты слов
 @router.message(lambda msg: msg.content_type == ContentType.TEXT)

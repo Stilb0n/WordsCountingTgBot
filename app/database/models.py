@@ -1,6 +1,7 @@
 from sqlalchemy import BigInteger, String, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+from sqlalchemy import Integer, DateTime, func
 import asyncio
 
 engine = create_async_engine(url='postgresql+asyncpg://postgres:12345@localhost/WordCountingTgBot_db')
@@ -14,10 +15,9 @@ class User(Base):
     __tablename__ = 'users'
     
     id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id = mapped_column(BigInteger)
-
-
-
+    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True)  # Убедитесь, что ID уникален
+    request_count: Mapped[int] = mapped_column(Integer, default=0)  # Счетчик запросов
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())  # Дата регистрации
 async def async_main():
     try:
         async with engine.begin() as conn:

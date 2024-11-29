@@ -12,35 +12,46 @@ class SessionMiddleware(BaseMiddleware):
     async def __call__(self, handler, event: TelegramObject, data: dict):
         async with self.session_factory() as session:
             data["session"] = session
+            logging.info("SessionMiddleware: сессия добавлена в data")
             return await handler(event, data)
 
+
+from aiogram.types import Update, Message, CallbackQuery
 
 class UserMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data: dict):
-        session = data.get("session")  # Получаем сессию
+        session = data.get("session")
         if not session:
+            logging.error("Session not found.")
             return await handler(event, data)
 
-        tg_id = None
-        if isinstance(event, Message):
-            tg_id = event.from_user.id
-        elif isinstance(event, CallbackQuery):
-            tg_id = event.from_user.id
+        # Логируем тип события
+        logging.info(f"UserMiddleware: тип события {type(event)}")
 
-        if not tg_id:
+        # Если событие — Update, извлекаем сообщение
+        if isinstance(event, Update):
+            if event.message:  # Если это сообщение
+                tg_id = event.message.from_user.id
+            elif event.callback_query:  # Если это callback_query (при необходимости)
+                tg_id = event.callback_query.from_user.id
+            else:
+                logging.error("Unsupported update content.")
+                return await handler(event, data)
+        elif isinstance(event, Message):
+            tg_id = event.from_user.id
+        else:
+            logging.error("Unsupported event type.")
             return await handler(event, data)
 
-        # Получаем пользователя из базы
+        # Получаем или создаём пользователя
         result = await session.execute(select(User).where(User.tg_id == tg_id))
         user = result.scalar_one_or_none()
 
-        # Если пользователь не найден, создаём его
         if not user:
             user = User(tg_id=tg_id, request_count=0)
             session.add(user)
             await session.commit()
 
-        # Добавляем пользователя в data
-        logging.info(f"User found or created: {user.tg_id}")
         data["user"] = user
+        logging.info(f"UserMiddleware: добавлен пользователь {data['user']}")
         return await handler(event, data)

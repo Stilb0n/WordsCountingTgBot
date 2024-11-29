@@ -13,7 +13,14 @@ from app.database.models import async_session
 
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,  # Можно изменить на DEBUG для более детальных логов
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),  # Логи будут записываться в файл
+        logging.StreamHandler()          # Логи также будут отображаться в консоли
+    ]
+)
 
 # Инициализация бота и диспетчера
 bot = Bot(token=TOKEN)

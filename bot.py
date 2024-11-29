@@ -7,6 +7,7 @@ from app.database.models import async_main
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from config import TOKEN
+from app.database.models import User
 
 async def register_user(tg_id: int, session: AsyncSession):
     async with session.begin():
